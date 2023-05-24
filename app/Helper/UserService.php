@@ -2,42 +2,51 @@
 
 namespace App\Helper;
 
-class UserService{
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Validator;
+
+
+class UserService
+{
     public $email, $password;
 
-    public function __construct($email, $password){
+    public function __construct($email, $password)
+    {
         $this->email = $email;
         $this->password = $password;
     }
 
-    public function validateInput(){
-        $validator = Validator::make(['email' => $this->email, 'password' => $this->password],
-        [
-            'email'=> ['required', 'email:rfc,dns', 'unique:users'],
-            'password'=> ['required', 'string', Password::min(8)]
-        ]);
+    public function validateInput()
+    {
+        $validator = Validator::make(
+            ['email' => $this->email, 'password' => $this->password],
+            [
+                'email' => ['required', 'email:rfc,dns', 'unique:users'],
+                'password' => ['required', 'string', Password::min(8)]
+            ]
+        );
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return ['status' => false, 'message' => $validator->messages()];
-        }
-        else{
+        } else {
             return ['status' => true];
         }
     }
 
-    public function register($deviceName){
+    public function register($deviceName)
+    {
         $validate = $this->validateInput();
-        if($validate['status'] == false ){
+        if ($validate['status'] == false) {
             return $validate;
-        }
-        else{
+        } else {
             $user = User::create([
-                'email'=> $this->email,
-                'password'=> Hash::make($this->password)
+                'email' => $this->email,
+                'password' => Hash::make($this->password)
             ]);
             $token = $user->createToken($deviceName)->plainTextToken;
-            return ['status'=> true, 'token' => $token, 'user'=> $user];
-            
+            return ['status' => true, 'token' => $token, 'user' => $user];
         }
     }
 }
