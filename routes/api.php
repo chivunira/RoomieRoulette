@@ -22,3 +22,5 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 #using api.php since it follows the token card contrary to web.php that follows sessions
 
 Route::post('register', [UserController::class, 'register']); // needs to be public since new users have no token
+
+

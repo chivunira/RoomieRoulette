@@ -18,12 +18,13 @@ class UserService
         $this->password = $password;
     }
 
-    public function validateInput()
+    public function validateInput($auth = false)
     {
+        $validationRule = $auth ? 'exists:users' : 'unique:users';
         $validator = Validator::make(
             ['email' => $this->email, 'password' => $this->password],
             [
-                'email' => ['required', 'email:rfc,dns', 'unique:users'],
+                'email' => ['required', 'email:rfc,dns', $validationRule],
                 'password' => ['required', 'string', Password::min(8)]
             ]
         );
@@ -47,6 +48,21 @@ class UserService
             ]);
             $token = $user->createToken($deviceName)->plainTextToken;
             return ['status' => true, 'token' => $token, 'user' => $user];
+        }
+    }
+
+    public function login() {
+        $validate = $this->validateInput(true);
+        if($validate['status'] == false) {
+            return $validate;
+        } else {
+            $user = User::where('email', $this->email)->first();
+            if(!$user || !Hash::check($this->password, $user->password)) {
+                return ['status' => false, 'message' => 'Invalid credentials'];
+            } else {
+                $token = $user->createToken('login')->plainTextToken;
+                return ['status' => true, 'token' => $token, 'user' => $user];
+            }
         }
     }
 }
